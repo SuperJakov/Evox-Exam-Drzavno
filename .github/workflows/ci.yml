@@ -1,0 +1,137 @@
+name: "Continuous Integration"
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  lint:
+    name: "Lint"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Cache Bun packages"
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: "Install dependencies"
+        run: bun install --frozen-lockfile
+
+      - name: "Generate Types"
+        run: bun typegen
+
+      - name: "Run linter"
+        run: bun lint
+
+  format:
+    name: "Format Check"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Cache Bun packages"
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: "Install dependencies"
+        run: bun install --frozen-lockfile
+
+      - name: "Check code formatting"
+        run: bun format:check
+
+  typecheck:
+    name: "Typecheck"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Cache Bun packages"
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: "Install dependencies"
+        run: bun install --frozen-lockfile
+
+      - name: "Generate Types"
+        run: bun typegen
+
+      - name: "Run typecheck"
+        run: bun typecheck
+
+  component-tests:
+    name: "Component Tests - ${{ matrix.browser }}"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, edge]
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Cache Bun packages"
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: "Cache Cypress binary"
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('bun.lock', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+
+      - name: "Install dependencies"
+        run: bun install --frozen-lockfile
+
+      - name: "Generate Types"
+        run: bun typegen
+
+      - name: "Cypress component tests"
+        uses: cypress-io/github-action@v7
+        with:
+          install: false
+          package-manager-cache: false
+          component: true
+          browser: ${{ matrix.browser }}
